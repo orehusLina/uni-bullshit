@@ -12,3 +12,6 @@
 *.log
 *.gz
 *.toc
+
+#Some more
+*.json
