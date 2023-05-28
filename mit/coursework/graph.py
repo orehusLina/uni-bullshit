@@ -37,4 +37,3 @@ plt.rcParams.update({'font.size': 18})
 plt.grid(True) 
 plt.legend(legend, loc="lower right")
 plt.show()
-
