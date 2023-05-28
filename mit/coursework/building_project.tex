@@ -1,0 +1,16 @@
+Теперь проект можно собрать, незначительно изменив \verb|Makefile|:
+
+\begin{minted}[fontsize=\small, breaklines=true, style=bw, linenos]{shell}
+calc.out: calc.l calc.y arena_ast.h 
+    bison -d calc.y 
+    flex calc.l 
+    cc -o $@ calc.tab.c lex.yy.c arena_ast.c arena.c
+\end{minted}
+и запустить. Результат работы программы представлен на рис. 1
+
+\begin{figure}[hbt!]
+    \centering
+    \includegraphics[scale=0.5]{naivetest.png}
+    \caption{Демонстрация работы программы}
+    \label{fig:naivetest}
+\end{figure}
