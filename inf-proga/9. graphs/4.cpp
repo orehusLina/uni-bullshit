@@ -1,59 +1,90 @@
-// BFS. Дан неориентированный граф. Определить содержит ли он циклы. Если да, то вывести их.
+// Дан неориентированный граф. Определить содержит ли он циклы. Если да, то вывести их.
 #include <iostream>
-#include <fstream>
-#include <queue>
 #include <vector>
+#include <set>
+#include <fstream>
+#include <algorithm>
 using namespace std;
-ifstream in("test3.txt");
+ifstream in("test5.txt");
 
-void bfs(int x, queue<int>& q, vector<int>& used, vector<int>& path, vector<vector<int>>& Gr) {
-    used[x] = 1;
-    path.push_back(x);
-    q.push(x);
-    int y;
-    while(!q.empty()) {
-        y = q.front();
-        for (int i = 0; i < Gr[y].size(); ++i) {
-            if (Gr[y][i] == 0) {
-                used[Gr[y][i]] = 1;
-                path.push_back(Gr[y][i]);
-                q.push(Gr[y][i]);
-            }
-        }
-        q.pop();
+int n, m;
+vector<vector<int>> g;
+vector<int> used; // вектор посещенных вершин
+vector<int> p; // вектор предков
+vector<vector<int>> cycles; // все циклы
+set<vector<int>> sort_cycles; // отсортированные циклы
+
+
+void add_cycles(int start, int end_) { // добавляем новый цикл
+    vector<int> temp;
+    // восстанавливаем цикл с помощью массива предков
+    for (int cur = end_; cur != start; cur = p[cur]) {
+        temp.push_back(cur);
     }
+    temp.push_back(start);
+    reverse(temp.begin(), temp.end()); // переворачиваем
+    cycles.push_back(temp); 
+    sort(temp.begin(), temp.end()); // сортируем вершины цикла
+    sort_cycles.insert(temp); // добавляем в сет 
 }
 
-void print(vector<vector<int>> Gr, int n) {
-    for (int i = 1; i <= n; ++i) {
-        cout << "Neighbors of " << i << " vertex: ";
-        for (int j = 1; j <= size(Gr[i])-1; ++j) {
-            cout << Gr[i][j] << ' ';
-        }
-        cout << endl;
-    }
+
+void dfs(int v, int pr = -1) { // обход в глубину
+	used[v] = 1;
+	p[v] = pr; // предок
+	for (int u : g[v]) {
+		if (p[v] == u) continue; // если текущая вершина - предок, пропускаем итерацию
+		if (!used[u]) dfs(u, v);  // если не были в вершине, продолжаем обход
+		else add_cycles(u, v); // иначе мы нашли цикл
+	}
+	used[v] = 0;
 }
+
+
+void graph() {
+	in >> n;
+	in >> m;
+	g.resize(n); // выделение памяти в векторах
+    used.resize(n);
+    p.resize(n);
+	int v, u;
+	for (int i = 0; i < m; ++i) { // добавление ребер в список смежности
+		in >> v >> u;
+        if (v > n || u > n) continue;
+		v--; u--;
+		g[v].push_back(u);
+		g[u].push_back(v);
+	}
+	for (int i = 0; i < n; ++i) {
+		sort(g[i].begin(), g[i].end()); // сортируем списки смежных вершин для каждой вершины
+		g[i].erase(unique(g[i].begin(), g[i].end()), g[i].end()); // удаляем дубликаты
+	}
+}
+
+ 
+void print_cycles(vector<int> c) { // выводим все циклы
+    for (auto v : c) cout << v + 1 << ' ';
+	cout << '\n';
+}
+
 
 int main() {
-    int n; in >> n; int m;
-    vector<vector<int>> Gr(n+1);
-    for (int i = 1; i <= n; ++i) {
-        int m; in >> m;
-        Gr[i].push_back(0);
-        int x;
-        for (int j = 1; j <= m; ++j) {
-            in >> x;
-            Gr[i].push_back(x);
+	graph();
+	for (int i = 0; i < n; ++i) { // запускаем обход в глубину для всех непосещенных вершин
+		if (!used[i]) {
+			dfs(i);
+		}
+	}
+    if (sort_cycles.empty()) cout << "There are no cycles :(";
+    else {
+        cout << "All cycles in the graph:\n";
+        for (auto c : cycles) {  // выводим циклы и отсеиваем совпадающие
+        vector<int> cycle = c;
+        sort(c.begin(), c.end());
+        if (sort_cycles.count(c)) {
+            sort_cycles.erase(c);
+            print_cycles(cycle);
         }
-    }
-    cout << "The adjacency list looks like this: ";
-    cout << endl;
-    print(Gr, n);
-    queue<int> q;
-    vector<int> used (n);
-    vector<int> path;
-    bfs(0, q, used, path, Gr);
-    for (int i = 0; i < path.size(); ++i) {
-        cout << path[i] << ' ';
+	}
     }
 }
